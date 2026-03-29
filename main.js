@@ -215,13 +215,17 @@ ipcMain.handle('dialog:confirm', async (event, message) => {
 });
 
 // IPC: 讀取剪貼簿圖片並存到暫存資料夾
-ipcMain.handle('clipboard:saveImage', async () => {
+ipcMain.handle('clipboard:saveImage', async (event, format = 'png') => {
     try {
         const image = clipboard.readImage();
         if (image.isEmpty()) return { success: false, error: '剪貼簿上沒有圖片' };
 
-        const tmpFile = path.join(os.tmpdir(), `clipboard_${Date.now()}.png`);
-        fs.writeFileSync(tmpFile, image.toPNG());
+        const normalizedFormat = format === 'jpg' ? 'jpg' : 'png';
+        const ext = normalizedFormat === 'jpg' ? 'jpg' : 'png';
+        const tmpFile = path.join(os.tmpdir(), `clipboard_${Date.now()}.${ext}`);
+        const buffer = normalizedFormat === 'jpg' ? image.toJPEG(90) : image.toPNG();
+
+        fs.writeFileSync(tmpFile, buffer);
         return { success: true, filePath: tmpFile };
     } catch (e) {
         return { success: false, error: e.message };

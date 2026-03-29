@@ -18,8 +18,15 @@
         <header>
             <h1>我的挑戰計畫</h1>
             <div class="actions">
-                <button id="btn-help"
-                    style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);">❓ 說明</button>
+                <div class="theme-switch" title="暗色 / 亮色模式切換">
+                    <span class="theme-switch-label">亮</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <label for="theme-toggle" aria-label="切換暗色模式"></label>
+                    </div>
+                    <span class="theme-switch-label">暗</span>
+                </div>
+                <button id="btn-help">❓ 說明</button>
                 <button id="btn-settings">⚙️ 系統設定與備份</button>
                 <button id="btn-create-topic">＋ 新增挑戰</button>
             </div>
@@ -32,8 +39,10 @@
 
     <!-- View: 主題詳細與日曆 -->
     <div id="view-topic-detail" class="view">
-        <header>
-            <button id="btn-back">🔙 返回列表</button>
+        <header class="detail-header">
+            <div class="detail-header-side detail-header-left">
+                <button id="btn-back">🔙 返回列表</button>
+            </div>
             <div class="topic-title-area">
                 <h1 id="detail-topic-title">主題名稱</h1>
                 <div id="topic-edit-inline" class="topic-edit-inline" style="display:none;">
@@ -43,7 +52,7 @@
                     <button id="btn-cancel-topic-edit" class="btn-secondary" type="button">取消</button>
                 </div>
             </div>
-            <div class="actions">
+            <div class="actions detail-header-side detail-header-right">
                 <button id="btn-edit-topic">✏️ 修改</button>
                 <button id="btn-delete-topic" class="btn-danger">🗑️ 刪除主題</button>
             </div>
@@ -84,11 +93,19 @@
                             <div class="form-group" id="file-upload-group" style="display:none;">
                                 <label>選擇或拖曳檔案</label>
                                 <div class="file-select-group drag-area" id="drag-drop-area">
-                                    <button type="button" id="btn-select-file">瀏覽檔案</button>
-                                    <button type="button" id="btn-paste-clipboard" title="將剪貼簿上的圖片直接設為打卡檔案 (Ctrl+V)"
-                                        style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px; color:white; cursor:pointer; font-size:13px;">📋
-                                        貼上</button>
-                                    <span id="selected-file-name" class="ellipsis" style="flex:1;">可直接將檔案拖曳至此</span>
+                                    <div class="file-picker-actions">
+                                        <button type="button" id="btn-select-file">瀏覽檔案</button>
+                                        <button type="button" id="btn-paste-clipboard" class="btn-secondary" title="將剪貼簿上的圖片直接設為打卡檔案 (Ctrl+V)">📋
+                                            貼上</button>
+                                    </div>
+                                    <div id="selected-file-display" class="selected-file-display is-empty" title="">
+                                        <div id="selected-file-preview" class="selected-file-preview">檔案</div>
+                                        <div class="selected-file-copy">
+                                            <span id="selected-file-name" class="selected-file-name">拖曳到此處或選擇檔案</span>
+                                            <span id="selected-file-hint" class="selected-file-hint">支援圖片、影片與 GIF</span>
+                                        </div>
+                                        <button type="button" id="btn-clear-selected-file" class="file-clear-btn" title="取消已選取檔案" style="display:none;">✕</button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -110,7 +127,7 @@
 
                             <div class="form-actions" style="display: flex; gap: 10px; margin-top: 10px;">
                                 <button type="button" class="btn-secondary" id="btn-back-step1"
-                                    style="flex:1; background:rgba(255,255,255,0.1); border:none; border-radius:6px; color:white; font-size:14px; cursor:pointer; padding:10px;">🔙
+                                    style="flex:1; font-size:14px; padding:10px;">🔙
                                     上一步</button>
                                 <button type="submit" id="btn-submit-record"
                                     style="flex:2; padding:10px; border-radius:6px; font-size:16px;">✅ 確認打卡</button>
@@ -190,6 +207,14 @@
                             style="width:auto; display:inline-block;"> 寬鬆模式 (不會因中斷而歸零，顯示歷史連貫天數)
                     </label>
                 </div>
+                <div class="form-group" style="margin-top:20px;">
+                    <label for="clipboard-image-format" style="color:var(--text-main); font-size:16px;">剪貼簿貼上圖片預設格式</label>
+                    <select id="clipboard-image-format"
+                        style="width:100%; padding:10px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--border); border-radius:6px; outline:none; margin-top:8px;">
+                        <option value="png">PNG</option>
+                        <option value="jpg">JPG</option>
+                    </select>
+                </div>
                 <button class="btn-primary" id="btn-save-settings" style="margin-top:10px;">儲存設定</button>
             </div>
 
@@ -254,6 +279,7 @@
         <div class="lightbox-header">
             <h2 id="lightbox-title">標題</h2>
             <div class="lightbox-controls">
+                <button id="btn-delete-current-record" title="刪除本日打卡">🗑️</button>
                 <button id="btn-zoom-in">🔍＋</button>
                 <button id="btn-zoom-out">🔍－</button>
                 <button id="lightbox-close">✖</button>

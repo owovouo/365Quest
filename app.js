@@ -3,6 +3,8 @@ let appData = { topics: [] };
 let currentTopicId = null;
 const myApi = window.api;
 const DEFAULT_TARGET_DAYS = 365;
+const DEFAULT_CLIPBOARD_IMAGE_FORMAT = 'png';
+const DEFAULT_THEME_MODE = 'dark';
 
 let filteredRecords = [];
 let currentPage = 1;
@@ -63,11 +65,15 @@ async function init() {
 
     const data = await myApi.readData('topics.json');
     if (data) {
-        if (!data.settings) data.settings = { difficulty: 'hard' };
+        if (!data.settings) data.settings = { difficulty: 'hard', clipboardImageFormat: DEFAULT_CLIPBOARD_IMAGE_FORMAT, themeMode: DEFAULT_THEME_MODE };
         if (!data.topics) data.topics = [];
         appData = data;
     } else {
-        appData = { settings: { difficulty: 'hard' }, topics: [] };
+        appData = { settings: { difficulty: 'hard', clipboardImageFormat: DEFAULT_CLIPBOARD_IMAGE_FORMAT, themeMode: DEFAULT_THEME_MODE }, topics: [] };
+    }
+
+    if (ensureSettingsShape(appData.settings)) {
+        await saveData();
     }
 
     if (ensureTopicsTargetDays(appData.topics)) {
@@ -78,6 +84,7 @@ async function init() {
     const todayStr = getLocalDateString(new Date());
     inputDate.value = todayStr;
     inputDate.max = todayStr;
+    applyTheme(appData.settings.themeMode);
 
     renderDashboard();
     setupEventListeners();
@@ -91,6 +98,36 @@ function getLocalDateString(date) {
 
 async function saveData() {
     await myApi.writeData('topics.json', appData);
+}
+
+function ensureSettingsShape(settings) {
+    if (!settings || typeof settings !== 'object') return false;
+
+    let changed = false;
+    if (!['hard', 'easy'].includes(settings.difficulty)) {
+        settings.difficulty = 'hard';
+        changed = true;
+    }
+    if (!['png', 'jpg'].includes(settings.clipboardImageFormat)) {
+        settings.clipboardImageFormat = DEFAULT_CLIPBOARD_IMAGE_FORMAT;
+        changed = true;
+    }
+    if (!['dark', 'light'].includes(settings.themeMode)) {
+        settings.themeMode = DEFAULT_THEME_MODE;
+        changed = true;
+    }
+
+    return changed;
+}
+
+function applyTheme(themeMode) {
+    const normalizedTheme = ['dark', 'light'].includes(themeMode) ? themeMode : DEFAULT_THEME_MODE;
+    document.body.dataset.theme = normalizedTheme;
+
+    const toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+        toggle.checked = normalizedTheme === 'dark';
+    }
 }
 
 async function saveTopicSnapshot(topic) {
@@ -155,7 +192,7 @@ function updateTopicHeader(topic = getCurrentTopic()) {
     ensureTopicShape(topic);
     const streak = calculateStreak(topic.records);
     const remaining = getTopicRemaining(topic);
-    document.getElementById('detail-topic-title').innerHTML = `${topic.name} <span style="font-size:16px; font-weight:normal; color:#ccc; margin-left:15px; display:inline-flex; align-items:center;">🔥連續: <b style="font-size:28px; color:var(--primary); margin:0 6px;">${streak}</b>次 | 🎯剩餘: <b style="font-size:28px; color:var(--o-color); margin:0 6px;">${remaining}</b>次</span>`;
+    document.getElementById('detail-topic-title').innerHTML = `${topic.name} <span style="font-size:16px; font-weight:normal; color:var(--text-muted); margin-left:15px; display:inline-flex; align-items:center;">🔥連續: <b style="font-size:28px; color:var(--primary); margin:0 6px;">${streak}</b>次 | 🎯剩餘: <b style="font-size:28px; color:var(--o-color); margin:0 6px;">${remaining}</b>次</span>`;
 }
 
 function setTopicEditMode(editing) {
@@ -307,8 +344,7 @@ async function openTopic(id) {
     formRecord.reset();
     inputDate.value = getLocalDateString(new Date());
     reasonGroup.style.display = 'none';
-    selectedFile = null;
-    document.getElementById('selected-file-name').innerText = '可直接將檔案拖曳至此';
+    resetSelectedFile();
 
     formRecord.style.display = 'none';
     step1Type.style.display = 'block';
@@ -337,17 +373,69 @@ function getCurrentTopic() {
     return appData.topics.find(t => t.id === currentTopicId);
 }
 
+async function renderSelectedFilePreview(filePath, label) {
+    const preview = document.getElementById('selected-file-preview');
+    const ext = (filePath.split('.').pop() || '').toLowerCase();
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+        const b64 = await myApi.readFileBase64(filePath);
+        if (b64) {
+            preview.innerHTML = `<img src="${b64}" alt="preview">`;
+            return;
+        }
+    }
+
+    if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+        preview.textContent = '影片';
+        return;
+    }
+
+    preview.textContent = label || ext.toUpperCase() || '檔案';
+}
+
+async function setSelectedFilePath(filePath, label) {
+    selectedFile = filePath;
+    const displayName = label || filePath.split(/[\\\/]/).pop();
+    const selectedFileDisplay = document.getElementById('selected-file-display');
+    const clearButton = document.getElementById('btn-clear-selected-file');
+    const selectedFileName = document.getElementById('selected-file-name');
+    const selectedFileHint = document.getElementById('selected-file-hint');
+    selectedFileDisplay.classList.remove('is-empty');
+    selectedFileName.innerText = '已選取檔案';
+    selectedFileHint.innerText = '點右側 X 可取消';
+    selectedFileDisplay.title = displayName;
+    clearButton.style.display = 'inline-flex';
+    await renderSelectedFilePreview(filePath, label);
+}
+
+function resetSelectedFile() {
+    selectedFile = null;
+    const selectedFileDisplay = document.getElementById('selected-file-display');
+    const clearButton = document.getElementById('btn-clear-selected-file');
+    const preview = document.getElementById('selected-file-preview');
+    const selectedFileName = document.getElementById('selected-file-name');
+    const selectedFileHint = document.getElementById('selected-file-hint');
+    selectedFileDisplay.classList.add('is-empty');
+    preview.innerHTML = '檔案';
+    selectedFileName.innerText = '拖曳到此處或選擇檔案';
+    selectedFileHint.innerText = '支援圖片、影片與 GIF';
+    selectedFileDisplay.title = '';
+    clearButton.style.display = 'none';
+}
+
 // 打卡
 async function handleRecordSubmit(e) {
     e.preventDefault();
     const topic = getCurrentTopic();
     const dateStr = inputDate.value;
     let title = document.getElementById('input-title').value.trim();
-    if (!title) title = `第 ${topic.records.length + 1} 次挑戰`;
     const reason = document.getElementById('input-reason').value.trim();
+    const existingRecordIndex = topic.records.findIndex(r => r.date === dateStr);
+    const existingRecord = existingRecordIndex === -1 ? null : topic.records[existingRecordIndex];
 
-    if (topic.records.some(r => r.date === dateStr)) {
-        showToast('這一天已經打過卡囉！', true); return;
+    if (existingRecord) {
+        const shouldOverwrite = await myApi.confirm('已有打卡，是否要覆蓋舊紀錄？');
+        if (!shouldOverwrite) return;
     }
 
     const selDate = new Date(dateStr);
@@ -361,7 +449,9 @@ async function handleRecordSubmit(e) {
     }
 
     // 連續性驗證
-    const recordsAsc = [...topic.records].sort((a, b) => a.date.localeCompare(b.date));
+    const recordsAsc = topic.records
+        .filter((_, idx) => idx !== existingRecordIndex)
+        .sort((a, b) => a.date.localeCompare(b.date));
     if (recordsAsc.length > 0) {
         const lastDate = new Date(recordsAsc[recordsAsc.length - 1].date);
         const diff = (selDate - lastDate) / (1000 * 60 * 60 * 24);
@@ -369,6 +459,8 @@ async function handleRecordSubmit(e) {
             if (!await myApi.confirm(`你選的不是連續日期唷！跳過了 ${Math.floor(diff) - 1} 天，確定要繼續嗎？`)) return;
         }
     }
+
+    if (!title) title = `第 ${topic.records.length + (existingRecord ? 0 : 1)} 次挑戰`;
 
     // 先暫時塞一個假的 index，等一下靠 reindexRecords 計算與改名
     const fakeIndex = topic.records.length + 1;
@@ -386,6 +478,13 @@ async function handleRecordSubmit(e) {
         savedPath = res.savedPath;
     }
 
+    if (existingRecord) {
+        if (existingRecord.savedPath) {
+            await myApi.deleteFile(existingRecord.savedPath);
+        }
+        topic.records.splice(existingRecordIndex, 1);
+    }
+
     topic.records.push({
         index: fakeIndex,
         date: dateStr,
@@ -401,8 +500,7 @@ async function handleRecordSubmit(e) {
     formRecord.reset();
     inputDate.value = getLocalDateString(new Date());
     reasonGroup.style.display = 'none';
-    selectedFile = null;
-    document.getElementById('selected-file-name').innerText = '可直接將檔案拖曳至此';
+    resetSelectedFile();
 
     formRecord.style.display = 'none';
     step1Type.style.display = 'block';
@@ -416,7 +514,7 @@ async function handleRecordSubmit(e) {
 }
 
 async function deleteRecord(recordDate, event) {
-    event.stopPropagation(); // 避免觸發 lightbox
+    if (event) event.stopPropagation(); // 避免觸發 lightbox
     if (!await myApi.confirm('確定要刪除這筆挑戰紀錄嗎？關聯的檔案也會一起被刪除！')) return;
 
     const topic = getCurrentTopic();
@@ -437,6 +535,7 @@ async function deleteRecord(recordDate, event) {
 
     applyFilters();
     renderCalendar();
+    return true;
 }
 
 // ---------------- 紀錄列表、搜尋與分頁 ----------------
@@ -668,31 +767,60 @@ function setupEventListeners() {
     };
 
     const dragArea = document.getElementById('drag-drop-area');
+    const clearSelectedFileBtn = document.getElementById('btn-clear-selected-file');
+    const extractDroppedFilePath = async (dataTransfer) => {
+        if (!dataTransfer) return null;
+        if (dataTransfer.files && dataTransfer.files.length > 0) {
+            const file = dataTransfer.files[0];
+            const filePath = myApi.getPathForFile(file);
+            if (filePath) return filePath;
+        }
+        if (dataTransfer.items && dataTransfer.items.length > 0) {
+            for (const item of dataTransfer.items) {
+                const file = item.getAsFile?.();
+                if (!file) continue;
+                const filePath = myApi.getPathForFile(file);
+                if (filePath) return filePath;
+            }
+        }
+        return null;
+    };
+
+    const applyDraggedFile = async (filePath) => {
+        if (!filePath) return;
+        await setSelectedFilePath(filePath);
+    };
+
     if (dragArea) {
         dragArea.addEventListener('dragover', e => {
             e.preventDefault();
-            dragArea.style.borderColor = 'var(--primary)';
-            dragArea.style.background = 'rgba(74, 144, 226, 0.2)';
+            e.stopPropagation();
+            dragArea.classList.add('is-dragging');
         });
         dragArea.addEventListener('dragleave', e => {
             e.preventDefault();
-            dragArea.style.borderColor = 'var(--border)';
-            dragArea.style.background = 'transparent';
+            e.stopPropagation();
+            dragArea.classList.remove('is-dragging');
         });
-        dragArea.addEventListener('drop', e => {
+        dragArea.addEventListener('drop', async e => {
             e.preventDefault();
-            dragArea.style.borderColor = 'var(--border)';
-            dragArea.style.background = 'transparent';
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                const f = e.dataTransfer.files[0];
-                selectedFile = f.path; // Electron path
-                const parts = selectedFile.split(/[\\\/]/);
-                const n = parts[parts.length - 1];
-                document.getElementById('selected-file-name').innerText = n;
-                document.getElementById('selected-file-name').title = n;
+            e.stopPropagation();
+            dragArea.classList.remove('is-dragging');
+            const droppedFilePath = await extractDroppedFilePath(e.dataTransfer);
+            if (!droppedFilePath) {
+                showToast('拖曳的項目無法讀取，請改用瀏覽檔案', true);
+                return;
             }
+            await applyDraggedFile(droppedFilePath);
         });
     }
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evtName => {
+        window.addEventListener(evtName, e => {
+            e.preventDefault();
+            if (evtName !== 'dragleave') e.stopPropagation();
+        });
+    });
 
     document.getElementById('btn-create-topic').onclick = () => {
         modalAddTopic.classList.add('active');
@@ -812,21 +940,20 @@ function setupEventListeners() {
     document.getElementById('btn-select-file').onclick = async () => {
         const file = await myApi.selectFile();
         if (file) {
-            selectedFile = file;
-            const parts = file.split(/[\\\/]/);
-            const n = parts[parts.length - 1];
-            document.getElementById('selected-file-name').innerText = n;
-            document.getElementById('selected-file-name').title = n;
+            await setSelectedFilePath(file);
         }
+    };
+
+    clearSelectedFileBtn.onclick = () => {
+        resetSelectedFile();
     };
 
     // 剪貼簿貼上：按鈕 或 Ctrl/Cmd+V（焦點不在文字欄位時）
     async function pasteFromClipboard() {
-        const result = await myApi.saveClipboardImage();
+        const format = appData.settings?.clipboardImageFormat || DEFAULT_CLIPBOARD_IMAGE_FORMAT;
+        const result = await myApi.saveClipboardImage(format);
         if (result.success) {
-            selectedFile = result.filePath;
-            document.getElementById('selected-file-name').innerText = '📋 剪貼簿圖片';
-            document.getElementById('selected-file-name').title = result.filePath;
+            await setSelectedFilePath(result.filePath, `📋 ${format.toUpperCase()}`);
             showToast('📋 已貼上剪貼簿圖片！');
         } else {
             showToast('剪貼簿上沒有圖片可貼上', true);
@@ -834,6 +961,13 @@ function setupEventListeners() {
     }
 
     document.getElementById('btn-paste-clipboard').onclick = pasteFromClipboard;
+
+    document.getElementById('theme-toggle').onchange = async (e) => {
+        const themeMode = e.target.checked ? 'dark' : 'light';
+        appData.settings.themeMode = themeMode;
+        applyTheme(themeMode);
+        await saveData();
+    };
 
     document.addEventListener('keydown', async (e) => {
         const isCtrlV = (e.ctrlKey || e.metaKey) && e.key === 'v';
@@ -858,6 +992,7 @@ function setupEventListeners() {
         const isEasy = appData.settings && appData.settings.difficulty === 'easy';
         document.getElementById('diff-easy').checked = isEasy;
         document.getElementById('diff-hard').checked = !isEasy;
+        document.getElementById('clipboard-image-format').value = appData.settings?.clipboardImageFormat || DEFAULT_CLIPBOARD_IMAGE_FORMAT;
 
         // 刷新匯出清單
         updateExportTopicOptions();
@@ -873,6 +1008,8 @@ function setupEventListeners() {
     document.getElementById('btn-save-settings').onclick = async () => {
         const val = document.querySelector('input[name="difficulty"]:checked').value;
         appData.settings.difficulty = val;
+        appData.settings.clipboardImageFormat = document.getElementById('clipboard-image-format').value;
+        ensureSettingsShape(appData.settings);
         await saveData();
         showToast('設定已儲存！');
     };
@@ -907,12 +1044,14 @@ function setupEventListeners() {
                 // 是完整備份
                 if (confirm('匯入完整備份將取代當前所有的紀錄，確定繼續嗎？')) {
                     appData = imported;
-                    if (!appData.settings) appData.settings = { difficulty: 'hard' };
+                    if (!appData.settings) appData.settings = { difficulty: 'hard', clipboardImageFormat: DEFAULT_CLIPBOARD_IMAGE_FORMAT, themeMode: DEFAULT_THEME_MODE };
+                    ensureSettingsShape(appData.settings);
                     ensureTopicsTargetDays(appData.topics);
                     // 重新編碼
                     for (const t of appData.topics) await reindexRecords(t);
                     await saveData();
                     await saveAllTopicSnapshots(appData.topics);
+                    applyTheme(appData.settings.themeMode);
                     showToast('完整匯入成功！');
                     switchView('dashboard');
                     renderDashboard();
@@ -1074,9 +1213,19 @@ function updateImgTransform() {
 }
 
 function setupLightboxEvents() {
+    const deleteCurrentRecordBtn = document.getElementById('btn-delete-current-record');
     document.getElementById('lightbox-close').onclick = () => lightbox.classList.remove('active');
     document.getElementById('lightbox-prev').onclick = () => navLightboxFiltered(1);
     document.getElementById('lightbox-next').onclick = () => navLightboxFiltered(-1);
+    deleteCurrentRecordBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (currentFilteredIdx < 0 || currentFilteredIdx >= filteredRecords.length) return;
+        const rec = filteredRecords[currentFilteredIdx];
+        const deleted = await deleteRecord(rec.date);
+        if (deleted) {
+            lightbox.classList.remove('active');
+        }
+    };
 
     // 點黑底（lightbox 本身或 wrapper 空白區域）關閉
     // 但若剛結束拖曳，忽略這次 click（避免大幅移動後誤觸關閉）

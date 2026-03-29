@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
     selectDirectory: () => ipcRenderer.invoke('dialog:selectDirectory'),
@@ -15,5 +15,6 @@ contextBridge.exposeInMainWorld('api', {
     renameFile: (oldPath, newFileName) => ipcRenderer.invoke('fs:renameFile', oldPath, newFileName),
     openFile: (filePath) => ipcRenderer.invoke('shell:openFile', filePath),
     showInFolder: (filePath) => ipcRenderer.invoke('shell:showInFolder', filePath),
-    saveClipboardImage: () => ipcRenderer.invoke('clipboard:saveImage')
+    saveClipboardImage: (format) => ipcRenderer.invoke('clipboard:saveImage', format),
+    getPathForFile: (file) => webUtils.getPathForFile(file)
 });

@@ -1,16 +1,40 @@
 :root {
     --bg-dark: #121212;
+    --bg-alt: #1E1E1E;
     --card-bg: rgba(255, 255, 255, 0.05);
-    --border: rgba(255, 255, 255, 0.1);
-    --primary: #4A90E2;
-    --primary-hover: #357ABD;
-    --danger: #E74C3C;
-    --danger-hover: #C0392B;
+    --surface-2: #222222;
+    --border: rgba(255, 255, 255, 0.08);
+    --primary: #0ABAB5;
+    --primary-hover: #089a96;
+    --primary-glow: rgba(10, 186, 181, 0.15);
+    --danger: #FF453A;
+    --danger-hover: #D83A31;
     --text-main: #FFFFFF;
-    --text-muted: #AAAAAA;
-    --o-color: #2ECC71;
-    --x-color: #E74C3C;
+    --text-soft: #A0A0A0;
+    --text-muted: #606060;
+    --o-color: #0ABAB5;
+    --x-color: #FF453A;
+    --shadow-main: 0 4px 24px rgba(0, 0, 0, 0.6);
     --glass-blur: blur(10px);
+}
+
+body[data-theme="light"] {
+    --bg-dark: #F5F5F7;
+    --bg-alt: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --surface-2: #E5E5EA;
+    --border: rgba(0, 0, 0, 0.1);
+    --primary: #5A5A60;
+    --primary-hover: #444449;
+    --primary-glow: rgba(90, 90, 96, 0.15);
+    --danger: #FF3B30;
+    --danger-hover: #D93028;
+    --text-main: #1D1D1F;
+    --text-soft: #555555;
+    --text-muted: #999999;
+    --o-color: #34C759;
+    --x-color: #FF3B30;
+    --shadow-main: 0 4px 24px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -22,7 +46,7 @@
 
 body {
     background: var(--bg-dark);
-    color: var(--text-main);
+    color: var(--text-soft);
     height: 100vh;
     overflow: hidden;
 }
@@ -82,21 +106,44 @@ header {
     padding: 10px 20px;
     margin-bottom: 20px;
     border-bottom: 1px solid var(--border);
+    background: var(--bg-dark);
 }
 
 header h1 {
     font-size: 24px;
     font-weight: 600;
+    color: var(--text-main);
+}
+
+.detail-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 16px;
+}
+
+.detail-header-side {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+
+.detail-header-left {
+    justify-content: flex-start;
+}
+
+.detail-header-right {
+    justify-content: flex-end;
 }
 
 .topic-title-area {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
     min-width: 0;
-    padding: 0 12px;
+    width: 100%;
+    padding: 0 8px;
 }
 
 .topic-title-area h1 {
@@ -123,6 +170,71 @@ header h1 {
 .actions {
     display: flex;
     gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.theme-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    user-select: none;
+}
+
+.theme-switch-label {
+    min-width: 20px;
+    text-align: center;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch label {
+    display: block;
+    width: 44px;
+    height: 24px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    position: relative;
+}
+
+.toggle-switch label::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-switch input:checked + label {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.toggle-switch input:checked + label::after {
+    transform: translateX(20px);
+    box-shadow: 0 1px 4px rgba(10, 186, 181, 0.35);
 }
 
 button {
@@ -132,13 +244,15 @@ button {
     cursor: pointer;
     transition: 0.2s;
     font-size: 14px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: var(--surface-2);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-main);
 }
 
 button:hover {
     filter: brightness(1.2);
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--surface-2) 85%, var(--primary) 15%);
 }
 
 #btn-create-topic,
@@ -150,6 +264,8 @@ button:hover {
 
 .btn-danger {
     background: var(--danger);
+    color: #fff;
+    border-color: transparent;
 }
 
 .ellipsis {
@@ -158,6 +274,86 @@ button:hover {
     text-overflow: ellipsis;
     max-width: 150px;
     display: inline-block;
+}
+
+.selected-file-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+    min-width: 0;
+    display: block;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.selected-file-display {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--card-bg) 86%, var(--surface-2) 14%);
+    border: 1px solid var(--border);
+    position: relative;
+}
+
+.selected-file-display.is-empty {
+    border-style: dashed;
+}
+
+.selected-file-preview {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--surface-2) 78%, var(--card-bg) 22%);
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.selected-file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.selected-file-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.selected-file-hint {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.file-clear-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 999px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.btn-secondary {
+    background: color-mix(in srgb, var(--surface-2) 88%, var(--card-bg) 12%);
+    color: var(--text-main);
 }
 
 /* 欄位配置 */
@@ -180,6 +376,8 @@ button:hover {
     flex: 6;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    min-height: 0;
 }
 
 /* 日曆大一點 */
@@ -194,6 +392,14 @@ button:hover {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
+    box-shadow: var(--shadow-main);
+}
+
+.calendar-card {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Tabs */
@@ -205,7 +411,7 @@ button:hover {
 
 .tab-btn {
     flex: 1;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-2);
     border: 1px solid var(--border);
     border-bottom: 2px solid transparent;
     padding: 12px;
@@ -239,7 +445,7 @@ button:hover {
     align-items: center;
     justify-content: center;
     padding: 30px 10px;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, var(--card-bg) 92%, var(--surface-2) 8%);
     border: 1px solid var(--border);
     border-radius: 12px;
     cursor: pointer;
@@ -249,7 +455,7 @@ button:hover {
 }
 
 .btn-type:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--card-bg) 80%, var(--primary) 20%);
     border-color: var(--primary);
     transform: translateY(-3px);
 }
@@ -263,9 +469,21 @@ button:hover {
     border: 2px dashed var(--border);
     border-radius: 8px;
     padding: 15px;
-    text-align: center;
     transition: 0.2s;
-    background: rgba(0, 0, 0, 0.1);
+    background: color-mix(in srgb, var(--card-bg) 90%, var(--surface-2) 10%);
+    min-height: 72px;
+    text-align: left;
+}
+
+.drag-area.is-dragging {
+    border-color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, var(--card-bg) 88%);
+}
+
+.file-picker-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* 列表與主頁 */
@@ -290,7 +508,7 @@ button:hover {
 
 .topic-card:hover {
     transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--card-bg) 85%, var(--primary) 15%);
 }
 
 .topic-card h3 {
@@ -332,9 +550,9 @@ button:hover {
 input[type="text"],
 input[type="date"],
 input[type="number"] {
-    background: rgba(0, 0, 0, 0.2);
+    background: color-mix(in srgb, var(--bg-alt) 88%, var(--surface-2) 12%);
     border: 1px solid var(--border);
-    color: white;
+    color: var(--text-main);
     padding: 10px;
     border-radius: 6px;
     outline: none;
@@ -352,6 +570,10 @@ input:focus {
         gap: 10px;
     }
 
+    .detail-header {
+        display: flex;
+    }
+
     .topic-title-area {
         order: 3;
         width: 100%;
@@ -361,12 +583,26 @@ input:focus {
     .topic-title-area h1 {
         white-space: normal;
     }
+
+    #drag-drop-area {
+        flex-direction: column;
+    }
+
+    .file-picker-actions {
+        width: 100%;
+    }
+
+    .file-picker-actions > button {
+        width: 100%;
+    }
 }
 
 .file-select-group {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
+    flex-wrap: wrap;
+    flex-direction: column;
 }
 
 /* 日曆 */
@@ -384,14 +620,15 @@ input:focus {
     grid-template-columns: repeat(7, 1fr);
     gap: 6px;
     text-align: center;
+    align-content: start;
 }
 
 .cal-day {
-    aspect-ratio: 1;
+    height: clamp(72px, 8.6vh, 118px);
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: color-mix(in srgb, var(--card-bg) 88%, var(--surface-2) 12%);
     border-radius: 8px;
     font-size: 14px;
     position: relative;
@@ -411,7 +648,7 @@ input:focus {
     border-radius: 50%;
     font-size: 14px;
     font-weight: bold;
-    background: rgba(0, 0, 0, 0.7);
+    background: color-mix(in srgb, var(--bg-dark) 82%, transparent 18%);
     backdrop-filter: blur(2px);
     z-index: 2;
 }
@@ -469,6 +706,7 @@ input:focus {
     gap: 20px;
     justify-content: center;
     font-size: 14px;
+    flex-wrap: wrap;
 }
 
 .mark.badge {
@@ -505,7 +743,7 @@ input:focus {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: color-mix(in srgb, var(--card-bg) 90%, var(--surface-2) 10%);
     padding: 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -516,7 +754,7 @@ input:focus {
 
 .record-item:hover {
     border-color: var(--primary);
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, var(--card-bg) 84%, var(--primary) 16%);
 }
 
 .record-thumb {
@@ -524,7 +762,8 @@ input:focus {
     height: 48px;
     border-radius: 6px;
     object-fit: cover;
-    background: #222;
+    background: color-mix(in srgb, var(--surface-2) 82%, var(--card-bg) 18%);
+    color: var(--text-muted);
 }
 
 .record-info {
@@ -597,7 +836,7 @@ input:focus {
 }
 
 .modal-content {
-    background: #1E1E1E;
+    background: var(--bg-alt);
     padding: 25px;
     border-radius: 12px;
     width: 400px;
@@ -651,14 +890,18 @@ input:focus {
 }
 
 .lightbox-controls button {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: color-mix(in srgb, var(--bg-alt) 82%, transparent 18%);
+    color: var(--text-main);
     font-size: 16px;
     padding: 8px 12px;
 }
 
 .lightbox-controls button:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+#btn-delete-current-record {
+    color: #ff8f8f;
 }
 
 #lightbox-close {
@@ -670,8 +913,8 @@ input:focus {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: color-mix(in srgb, var(--bg-alt) 82%, transparent 18%);
+    color: var(--text-main);
     font-size: 24px;
     padding: 20px 10px;
     border-radius: 8px;
