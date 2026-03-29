@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>挑戰管理程式</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- 自訂通知 Toast -->
+    <div id="toast" class="toast">打卡成功！</div>
+
+    <!-- View: 主題列表 -->
+    <div id="view-dashboard" class="view active">
+        <header>
+            <h1>我的挑戰計畫</h1>
+            <div class="actions">
+                <button id="btn-help"
+                    style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);">❓ 說明</button>
+                <button id="btn-settings">⚙️ 系統設定與備份</button>
+                <button id="btn-create-topic">＋ 新增挑戰</button>
+            </div>
+        </header>
+
+        <main id="topics-list" class="grid-list">
+            <!-- 動態產生 -->
+        </main>
+    </div>
+
+    <!-- View: 主題詳細與日曆 -->
+    <div id="view-topic-detail" class="view">
+        <header>
+            <button id="btn-back">🔙 返回列表</button>
+            <div class="topic-title-area">
+                <h1 id="detail-topic-title">主題名稱</h1>
+                <div id="topic-edit-inline" class="topic-edit-inline" style="display:none;">
+                    <input type="text" id="input-edit-topic-name" placeholder="主題名稱">
+                    <input type="number" id="input-edit-topic-days" min="1" step="1" placeholder="挑戰天數">
+                    <button id="btn-save-topic-edit" class="btn-primary" type="button">儲存</button>
+                    <button id="btn-cancel-topic-edit" class="btn-secondary" type="button">取消</button>
+                </div>
+            </div>
+            <div class="actions">
+                <button id="btn-edit-topic">✏️ 修改</button>
+                <button id="btn-delete-topic" class="btn-danger">🗑️ 刪除主題</button>
+            </div>
+        </header>
+
+        <main class="detail-container">
+            <!-- 左側：增加紀錄與列表 -->
+            <div class="left-panel">
+                <div class="tabs-header">
+                    <button class="tab-btn active" data-target="tab-record">🚀 快速打卡</button>
+                    <button class="tab-btn" data-target="tab-history">📜 歷史與搜尋</button>
+                </div>
+
+                <!-- 打卡 Tab -->
+                <div class="tab-content active" id="tab-record">
+                    <div class="add-record-card step-by-step">
+                        <div class="step-progress">
+                            <h2 id="step-title" style="font-size: 18px; margin-bottom: 15px;">步驟 1：選擇打卡方式</h2>
+                        </div>
+
+                        <div id="step-1-type" class="step-section active">
+                            <div class="type-buttons">
+                                <button type="button" class="btn-type" id="btn-type-text">
+                                    <span class="emoji">📝</span>
+                                    <span>純文字紀錄</span>
+                                </button>
+                                <button type="button" class="btn-type" id="btn-type-media">
+                                    <span class="emoji">📸</span>
+                                    <span>上傳檔案紀錄</span>
+                                    <span
+                                        style="font-size:12px; color:var(--text-muted); display:block; margin-top:5px;">(圖片
+                                        / 影片 / GIF)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <form id="form-record" class="step-section" style="display:none;">
+                            <div class="form-group" id="file-upload-group" style="display:none;">
+                                <label>選擇或拖曳檔案</label>
+                                <div class="file-select-group drag-area" id="drag-drop-area">
+                                    <button type="button" id="btn-select-file">瀏覽檔案</button>
+                                    <button type="button" id="btn-paste-clipboard" title="將剪貼簿上的圖片直接設為打卡檔案 (Ctrl+V)"
+                                        style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); padding:6px 12px; border-radius:6px; color:white; cursor:pointer; font-size:13px;">📋
+                                        貼上</button>
+                                    <span id="selected-file-name" class="ellipsis" style="flex:1;">可直接將檔案拖曳至此</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group-row">
+                                <div class="form-group flex-1">
+                                    <label>指定日期</label>
+                                    <input type="date" id="input-date" required>
+                                </div>
+                                <div class="form-group flex-1">
+                                    <label>標題備註 (選填)</label>
+                                    <input type="text" id="input-title" placeholder="預設自動編號">
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="reason-group" style="display:none;">
+                                <label>錯過理由 (補卡超過昨天需填)</label>
+                                <input type="text" id="input-reason" placeholder="例如：沒有網路">
+                            </div>
+
+                            <div class="form-actions" style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button type="button" class="btn-secondary" id="btn-back-step1"
+                                    style="flex:1; background:rgba(255,255,255,0.1); border:none; border-radius:6px; color:white; font-size:14px; cursor:pointer; padding:10px;">🔙
+                                    上一步</button>
+                                <button type="submit" id="btn-submit-record"
+                                    style="flex:2; padding:10px; border-radius:6px; font-size:16px;">✅ 確認打卡</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 歷史與搜尋 Tab -->
+                <div class="tab-content" id="tab-history" style="display:none;">
+                    <!-- 搜尋與過濾區 -->
+                    <div class="search-card" style="margin-bottom: 20px;">
+                        <h2>檢索過濾</h2>
+                        <div class="search-grid">
+                            <input type="text" id="search-title" placeholder="主題關鍵字...">
+                            <input type="text" id="search-ext" placeholder="副檔名(如 jpg)">
+                            <input type="date" id="search-date-start" title="起始日期">
+                            <input type="date" id="search-date-end" title="結束日期">
+                        </div>
+                    </div>
+
+                    <div class="records-list-card">
+                        <h2>挑戰紀錄 (由新到舊)</h2>
+                        <div id="records-container" class="records-container">
+                            <!-- 動態產生 -->
+                        </div>
+                        <!-- 分頁區 -->
+                        <div class="pagination" id="pagination-controls">
+                            <button id="btn-page-prev">上一頁</button>
+                            <span id="page-info">1 / 1</span>
+                            <button id="btn-page-next">下一頁</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：日曆 -->
+            <div class="right-panel">
+                <div class="calendar-card">
+                    <h2>挑戰日曆</h2>
+                    <div class="calendar-header">
+                        <button id="cal-prev">◀</button>
+                        <span id="cal-month-year">2026年 3月</span>
+                        <button id="cal-next">▶</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- 動態產生 -->
+                    </div>
+                    <div class="calendar-legend">
+                        <span><span class="mark badge o">O</span> 圓圈代表次數</span>
+                        <span><span class="mark badge x">✕</span> 中斷跳過</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View: 設定與備份 -->
+    <div id="view-settings" class="view">
+        <header>
+            <button id="btn-back-settings">🔙 返回列表</button>
+            <h1>系統設定與匯出/匯入</h1>
+            <div class="actions"></div>
+        </header>
+
+        <main class="detail-container"
+            style="display:block; max-width: 600px; margin: 0 auto; overflow-y:auto; padding-bottom:40px;">
+            <div class="search-card" style="margin-bottom:20px;">
+                <h2>難度設定</h2>
+                <div class="form-group" style="margin-top:15px;">
+                    <label style="color:var(--text-main); font-size:16px;">
+                        <input type="radio" name="difficulty" value="hard" id="diff-hard"
+                            style="width:auto; display:inline-block;"> 嚴格模式 (未打卡就會重置連續天數)
+                    </label>
+                    <label style="color:var(--text-main); font-size:16px; margin-top:10px; display:block;">
+                        <input type="radio" name="difficulty" value="easy" id="diff-easy"
+                            style="width:auto; display:inline-block;"> 寬鬆模式 (不會因中斷而歸零，顯示歷史連貫天數)
+                    </label>
+                </div>
+                <button class="btn-primary" id="btn-save-settings" style="margin-top:10px;">儲存設定</button>
+            </div>
+
+            <div class="search-card" style="margin-bottom:20px;">
+                <h2>📦 匯出資料</h2>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:15px;">
+                    您可以選擇匯出整個系統所有主題的打包檔（推薦），或是只單獨匯出某一項挑戰主題交給別人。</p>
+                <div class="form-group">
+                    <button class="btn-primary" id="btn-export-all" style="width:100%;">匯出全系統資料包 (含設定檔)</button>
+                </div>
+                <div class="form-group" style="margin-top:20px; border-top:1px solid var(--border); padding-top:20px;">
+                    <label>或選擇單一挑戰主題匯出：</label>
+                    <div style="display:flex; gap:10px;">
+                        <select id="export-topic-select"
+                            style="flex:1; padding:8px; background:rgba(0,0,0,0.5); color:white; border:1px solid #555; border-radius:4px; outline:none;"></select>
+                        <button class="btn-primary" id="btn-export-single">📄 匯出所選主題</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-card">
+                <h2>📥 匯入資料</h2>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:10px;">支援全系統資料包或是單一主題，系統會自動判斷結構替您新增或覆蓋。
+                </p>
+                <div class="form-group">
+                    <button class="btn-danger" id="btn-import-settings">選擇並匯入備份檔</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: 新增主題 -->
+    <div id="modal-add-topic" class="modal">
+        <div class="modal-content">
+            <h2>建立新挑戰</h2>
+            <form id="form-topic">
+                <div class="form-group">
+                    <label>挑戰天數</label>
+                    <input type="number" id="input-topic-days" min="1" step="1" value="365" required>
+                </div>
+                <div class="form-group">
+                    <label>挑戰名稱</label>
+                    <input type="text" id="input-topic-name" required placeholder="例如：每天拍一張照片">
+                </div>
+                <div class="form-group">
+                    <label>選擇存檔位置 (將於此資料夾存放打卡檔案)</label>
+                    <div class="file-select-group">
+                        <button type="button" id="btn-select-dir">選擇資料夾...</button>
+                        <span id="selected-dir-name" class="ellipsis maxWidth-200">未選擇</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancel-topic" class="btn-secondary">取消</button>
+                    <button type="submit" id="btn-confirm-topic" class="btn-primary">建立</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lightbox: 檢視圖層全螢幕漂浮 -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-header">
+            <h2 id="lightbox-title">標題</h2>
+            <div class="lightbox-controls">
+                <button id="btn-zoom-in">🔍＋</button>
+                <button id="btn-zoom-out">🔍－</button>
+                <button id="lightbox-close">✖</button>
+            </div>
+        </div>
+
+        <button id="lightbox-prev" class="nav-btn">◀</button>
+        <button id="lightbox-next" class="nav-btn">▶</button>
+
+        <!-- 滿版的容器，供拖曳使用 -->
+        <div id="lightbox-wrapper" class="lightbox-wrapper">
+            <!-- JavaScript 會動態插入 img 或 video -->
+        </div>
+    </div>
+
+    <!-- Modal: 說明 -->
+    <div id="modal-help" class="modal">
+        <div class="modal-content" style="max-width:600px; max-height:80vh; overflow-y:auto;">
+            <h2>📊 挑戰管理程式 — 使用說明</h2>
+            <div style="color:var(--text-main); line-height:1.9; font-size:15px; margin-top:20px;">
+                <p>🎯 <b>程式目標</b>：幫助您追蹤可自訂天數的挑戰。不論是「每天拍一張照」、「每天運動」，還是「戒奶茶計畫」，都可以在這裡記錄。</p>
+                <hr style="margin:15px 0; border-color:rgba(255,255,255,0.1);">
+                <p>📁 <b>挑戰主題</b>：可新增多個挑戰，每個挑戰有自己獨立的資料夾用於存放檔案。</p>
+                <p>📸 <b>每日打卡</b>：選擇日期、填入主題，可選擇上傳圖片、GIF 或 MP4 影片。<b>檔案為選填</b>，純文字打卡也完全有效。</p>
+                <p>📅 <b>挑戰日曆</b>：瀏覽每天的成果，有檔案的天份會顯示圖片縮圖為日曆背景，點擊可放大檢視。<b>點擊空白日期</b>可快速帶入日期至打卡表單。</p>
+                <p>🔍 <b>搜尋與分頁</b>：支援依主題、副檔名、日期範圍搜尋紀錄，每頁最多顯示 30 筆。</p>
+                <p>🔥 <b>連續天數</b>：首頁顯示目前連續打卡天數，以及距離該挑戰目標還剩幾天。</p>
+                <p>💾 <b>備份與匯入</b>：可將全系統資料搭配設定匯出為 JSON，也可單獨匯出某一挑戰主題分享給別人。</p>
+                <p>⚙️ <b>難度設定</b>：
+                    <br>・<b>嚴格模式</b>：昨天漏打卡，今天連續天數就歸零。
+                    <br>・<b>寬鬆模式</b>：不歸零，顯示歷史中曾達成的最長連續段落。
+                </p>
+                <hr style="margin:15px 0; border-color:rgba(255,255,255,0.1);">
+                <p style="color:var(--text-muted); font-size:13px;">🔧 如需設定難度或備份，請點擊首頁右上角的「⚙️ 系統設定與備份」。</p>
+            </div>
+            <div style="text-align:right; margin-top:25px;">
+                <button id="btn-help-close" class="btn-primary">了解了 ✔</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
