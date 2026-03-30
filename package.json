@@ -1,6 +1,6 @@
 {
   "name": "365-challenge",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "365天挑戰管理程式",
   "main": "main.js",
   "scripts": {

@@ -136,6 +136,12 @@ header h1 {
     justify-content: flex-end;
 }
 
+.detail-header-right button {
+    min-width: 118px;
+    min-height: 40px;
+    justify-content: center;
+}
+
 .topic-title-area {
     display: flex;
     flex-direction: column;
@@ -148,10 +154,54 @@ header h1 {
 
 .topic-title-area h1 {
     width: 100%;
+    margin: 0;
+}
+
+.topic-title-content {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
     text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
+}
+
+.topic-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.1;
+}
+
+.topic-stats {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-muted);
+    font-size: 16px;
+    line-height: 1;
+}
+
+.topic-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     white-space: nowrap;
+}
+
+.topic-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.topic-stat-value.is-primary {
+    color: var(--primary);
+}
+
+.topic-stat-value.is-success {
+    color: var(--o-color);
 }
 
 .topic-edit-inline {
@@ -580,8 +630,13 @@ input:focus {
         padding: 0;
     }
 
-    .topic-title-area h1 {
-        white-space: normal;
+    .topic-title-content {
+        gap: 10px;
+    }
+
+    .topic-stats {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     #drag-drop-area {

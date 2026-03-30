@@ -192,7 +192,15 @@ function updateTopicHeader(topic = getCurrentTopic()) {
     ensureTopicShape(topic);
     const streak = calculateStreak(topic.records);
     const remaining = getTopicRemaining(topic);
-    document.getElementById('detail-topic-title').innerHTML = `${topic.name} <span style="font-size:16px; font-weight:normal; color:var(--text-muted); margin-left:15px; display:inline-flex; align-items:center;">🔥連續: <b style="font-size:28px; color:var(--primary); margin:0 6px;">${streak}</b>次 | 🎯剩餘: <b style="font-size:28px; color:var(--o-color); margin:0 6px;">${remaining}</b>次</span>`;
+    document.getElementById('detail-topic-title').innerHTML = `
+        <span class="topic-title-content">
+            <span class="topic-name">${topic.name}</span>
+            <span class="topic-stats">
+                <span class="topic-stat">🔥 連續 <span class="topic-stat-value is-primary">${streak}</span> 次</span>
+                <span class="topic-stat">🎯 剩餘 <span class="topic-stat-value is-success">${remaining}</span> 次</span>
+            </span>
+        </span>
+    `;
 }
 
 function setTopicEditMode(editing) {
