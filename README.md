@@ -19,3 +19,6 @@ npm run build:win
 ```
 npm run build:mac
 ```
+
+## Release
+有打包了windows用的版本，mac的請自行打包或直接npm執行
